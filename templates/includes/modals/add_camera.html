@@ -1,0 +1,194 @@
+<!-- Add New Camera Modal - Fixed Height with Scroll -->
+<div id="cameraFormModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 transition-opacity duration-300">
+  <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" style="pointer-events: none;"></div>
+  
+  <!-- Modal container with fixed height -->
+  <div class="modal-container bg-white w-11/12 md:w-5/6 lg:w-2/3 xl:w-1/2 mx-auto rounded-lg shadow-xl z-50 overflow-hidden" style="height: 620px;">
+    
+    <!-- Fixed Header -->
+    <div class="sticky top-0 bg-white border-b border-gray-200 z-10">
+      <div class="flex justify-between items-center py-4 px-6">
+        <p class="text-2xl font-bold text-gray-800" id="cameraFormTitle">Add New Camera</p>
+        <!-- <button class="close-modal focus:outline-none text-gray-500 hover:text-gray-700 transition-colors" aria-label="Close modal" onclick="closeModal('cameraFormModal')">
+          <i class="fas fa-times text-xl"></i>
+        </button> -->
+      </div>
+    </div>
+    
+    <!-- Scrollable Content Area -->
+    <div class="h-full overflow-y-auto">
+      <div class="p-6">
+        <form id="cameraForm" method="post" action="{{ url_for('save_camera') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <input type="hidden" id="cameraId" name="camera_id" value="">
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <div class="mb-4">
+              <label for="cameraName" class="block text-gray-700 font-medium mb-2">
+                Camera Name* 
+                <span class="text-xs text-gray-500 font-normal">(e.g., Main Pool Camera)</span>
+              </label>
+              <input type="text" id="cameraName" name="name" 
+                     class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" 
+                     placeholder="Enter camera name"
+                     required>
+            </div>
+            
+            <div class="mb-4">
+              <label for="location" class="block text-gray-700 font-medium mb-2">Location*</label>
+              <select id="location" name="location" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" required>
+                <option value="" disabled selected>Select Location</option>
+                <option value="adult_pool">Adult Pool</option>
+                <option value="kids_pool">Kids Pool</option>
+                <option value="main_pool">Main Pool</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <div class="mb-4 md:col-span-2">
+              <label for="rtspUrl" class="block text-gray-700 font-medium mb-2">
+                RTSP URL* 
+                <span class="text-xs text-gray-500 font-normal">(RTSP stream address)</span>
+              </label>
+              <input type="text" id="rtspUrl" name="rtsp_url" 
+                     class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" 
+                     placeholder="rtsp://username:password@ip:port/stream/channel" 
+                     required>
+              <p class="text-xs text-gray-500 mt-1">
+                <i class="fas fa-info-circle mr-1"></i>
+                Example: rtsp://admin:password@192.168.1.100:554/live/1
+              </p>
+              <div id="rtspUrlError" class="text-red-500 text-sm mt-1 hidden flex items-center">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                <span id="rtspUrlErrorText"></span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Live Preview Section -->
+          <div class="mb-4 p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200" id="previewContainer">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-semibold text-gray-800 flex items-center">
+                <i class="fas fa-video mr-2 text-blue-600"></i>
+                Live Preview
+              </h3>
+              <button type="button" id="testConnectionBtn" 
+                      class="px-5 py-2.5 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                 Test Connection
+              </button>
+            </div>
+            
+            <div class="relative bg-black h-48 md:h-64 flex justify-center items-center rounded-lg overflow-hidden shadow-inner">
+              <!-- Preview Status Message -->
+              <div id="previewStatus" class="absolute inset-0 flex flex-col items-center justify-center text-white z-10 bg-black bg-opacity-70">
+                <i class="fas fa-plug text-4xl mb-3 text-gray-400"></i>
+                <p class="text-sm">Waiting for connection test...</p>
+              </div>
+              
+              <!-- Preview Feed Image -->
+              <img id="previewFeed" 
+                   class="h-full w-full object-contain hidden" 
+                   src="" 
+                   alt="Preview">
+            </div>
+            
+            <!-- Stream Information -->
+            <div class="flex flex-col md:flex-row md:justify-between mt-3 space-y-2 md:space-y-0 text-sm">
+              <div class="flex items-center space-x-4 text-gray-600">
+                <div class="flex items-center">
+                  <i class="fas fa-desktop mr-2 text-blue-500"></i>
+                  <span>Resolution: <span id="previewResolution" class="font-medium">-</span></span>
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-tachometer-alt mr-2 text-green-500"></i>
+                  <span>FPS: <span id="previewFps" class="font-medium">-</span></span>
+                </div>
+              </div>
+              
+              <div class="flex items-center">
+                <span class="text-xs text-gray-600 mr-2">Status:</span>
+                <span class="status-dot bg-red-500 w-2.5 h-2.5 rounded-full mr-2" id="previewStatusDot"></span>
+                <span class="text-xs font-medium text-gray-700" id="previewStatusText">Disconnected</span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Fixed Footer -->
+    <div class="sticky bottom-0 bg-white border-t border-gray-200 z-10">
+      <div class="flex flex-col md:flex-row justify-end gap-3 p-6">
+        <button type="button" 
+                onclick="closeModal('cameraFormModal')"
+                class="px-5 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+           Cancel
+        </button>
+        <button type="submit" form="cameraForm"
+                class="px-5 py-2.5 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+           Save Camera
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Custom scrollbar for modal content */
+.modal-container > div:not(.sticky)::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-container > div:not(.sticky)::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 3px;
+}
+
+.modal-container > div:not(.sticky)::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.modal-container > div:not(.sticky)::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Ensure proper spacing */
+.modal-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fixed header and footer styling */
+.sticky {
+  backdrop-filter: blur(8px);
+}
+
+/* Preview container styling */
+#previewContainer {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+/* Status dot animations */
+.status-dot {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Connection status colors */
+.status-connected {
+  background-color: #10b981 !important; /* green-500 */
+}
+
+.status-disconnected {
+  background-color: #ef4444 !important; /* red-500 */
+}
+
+.status-connecting {
+  background-color: #f59e0b !important; /* amber-500 */
+}
+</style>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in to Pool Watch</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" type="image/svg+xml" href="/static/img/cctv_favicon.svg">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/login-style.css">
+  <link rel="stylesheet" href="/static/css/flask-message-style.css">
+ 
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center min-h-screen px-4">
+
+  <!-- Flash Messages Container -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages-container">
+        {% for category, message in messages %}
+          <div class="flash-message" data-category="{{ category }}">
+            <div class="flex items-start justify-between">
+              <div class="flex items-start flex-1">
+                <div class="flex-shrink-0 mt-0.5">
+                  {% if category == 'success' %}
+                    <i class="fas fa-check-circle"></i>
+                  {% elif category == 'error' or category == 'danger' %}
+                    <i class="fas fa-exclamation-circle"></i>
+                  {% elif category == 'warning' %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                  {% else %}
+                    <i class="fas fa-info-circle"></i>
+                  {% endif %}
+                </div>
+                <div class="ml-3 flex-1">
+                  <p>{{ message }}</p>
+                </div>
+              </div>
+              <button type="button" class="flash-close ml-4 flex-shrink-0">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="bg-white shadow-2xl rounded-2xl overflow-hidden w-full max-w-md">
+    
+    <!-- Header Image -->
+    <div class="w-full h-48">
+      <img src="/static/img/cctv_image.png" alt="CCTV Monitor" 
+          class="w-full h-full object-cover">
+    </div>
+
+    <!-- Login form -->
+    <div class="p-6 sm:p-8">
+      <h2 class="text-2xl sm:text-3xl font-bold text-blue-800 mb-2 text-center">Sign in to Pool Watch</h2>
+
+      <form action="{{ url_for('login') }}" method="POST" class="space-y-6">
+        {{ form.hidden_tag() }}
+
+        <!-- Email -->
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+          <div class="relative">
+            <i class="fas fa-envelope absolute left-3 top-3 text-gray-400"></i>
+            {{ form.email(class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none", placeholder="your.email@example.com") }}
+          </div>
+          {% if form.email.errors %}
+            <p class="text-red-600 text-sm mt-1 flex items-center">
+              <i class="fas fa-exclamation-circle mr-1"></i> {{ form.email.errors[0] }}
+            </p>
+          {% endif %}
+        </div>
+
+        <!-- Password -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          </div>
+          <div class="relative">
+            <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+            {{ form.password(class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none", placeholder="Enter your password") }}
+            <button type="button" onclick="togglePasswordVisibility()"
+              class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-blue-600">
+              <i id="passwordIcon" class="fas fa-eye"></i>
+            </button>
+          </div>
+          {% if form.password.errors %}
+            <p class="text-red-600 text-sm mt-1 flex items-center">
+              <i class="fas fa-exclamation-circle mr-1"></i> {{ form.password.errors[0] }}
+            </p>
+          {% endif %}
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit"
+          class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-300">
+          Sign In
+        </button>
+
+        <!-- Sign up link -->
+        <p class="text-center text-sm text-gray-600 mt-4">
+          Don't have an account? 
+          <a href="{{ url_for('signup') }}" class="text-blue-600 font-semibold hover:underline">Sign up here</a>
+        </p>
+      </form>
+
+      <p class="text-center text-xs text-gray-500 mt-6">© 2025 Pool Watch Monitoring System</p>
+    </div>
+  </div>
+
+  <script>
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('password');
+      const passwordIcon = document.getElementById('passwordIcon');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        passwordIcon.classList.remove('fa-eye');
+        passwordIcon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        passwordIcon.classList.remove('fa-eye-slash');
+        passwordIcon.classList.add('fa-eye');
+      }
+    }
+
+    // Flash message auto-dismiss functionality
+    function initializeFlashMessages() {
+      const flashMessages = document.querySelectorAll('.flash-message:not([data-initialized])');
+      
+      flashMessages.forEach(message => {
+        // Mark as initialized to prevent duplicate handling
+        message.setAttribute('data-initialized', 'true');
+        
+        // Auto-dismiss after 5 seconds
+        const dismissTimer = setTimeout(() => {
+          dismissFlashMessage(message);
+        }, 5000);
+        
+        // Add click handler for close button
+        const closeBtn = message.querySelector('.flash-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            clearTimeout(dismissTimer);
+            dismissFlashMessage(message);
+          });
+        }
+        
+        // Pause dismiss on hover
+        message.addEventListener('mouseenter', function() {
+          clearTimeout(dismissTimer);
+        });
+        
+        message.addEventListener('mouseleave', function() {
+          // Restart timer when mouse leaves
+          const newTimer = setTimeout(() => {
+            dismissFlashMessage(message);
+          }, 5000);
+          message.setAttribute('data-dismiss-timer', newTimer);
+        });
+        
+        // Store the original timer
+        message.setAttribute('data-dismiss-timer', dismissTimer);
+      });
+    }
+
+    function dismissFlashMessage(message) {
+      // Add dismissing class for animation
+      message.classList.add('dismissing');
+      
+      // Remove after animation completes
+      setTimeout(() => {
+        if (message.parentNode) {
+          message.remove();
+        }
+      }, 300);
+    }
+
+    // Clean up timers when page unloads
+    window.addEventListener('beforeunload', function() {
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach(message => {
+        const timerId = message.getAttribute('data-dismiss-timer');
+        if (timerId) {
+          clearTimeout(parseInt(timerId));
+        }
+      });
+    });
+
+    // Initialize flash messages on page load
+    document.addEventListener('DOMContentLoaded', initializeFlashMessages);
+  </script>
+
+</body>
+</html>

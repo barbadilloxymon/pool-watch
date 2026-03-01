@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - Pool Watch</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/signup-style.css">
+  <link rel="stylesheet" href="/static/css/flask-message-style.css">
+  <link rel="icon" type="image/svg+xml" href="/static/img/cctv_favicon.svg">
+
+</head>
+<body class="bg-blue-50 min-h-screen flex items-center justify-center p-4">
+  
+  <!-- Flash Messages Container -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages-container">
+        {% for category, message in messages %}
+          <div class="flash-message" data-category="{{ category }}">
+            <div class="flex items-start justify-between">
+              <div class="flex items-start flex-1">
+                <div class="flex-shrink-0 mt-0.5">
+                  {% if category == 'success' %}
+                    <i class="fas fa-check-circle"></i>
+                  {% elif category == 'error' or category == 'danger' %}
+                    <i class="fas fa-exclamation-circle"></i>
+                  {% elif category == 'warning' %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                  {% else %}
+                    <i class="fas fa-info-circle"></i>
+                  {% endif %}
+                </div>
+                <div class="ml-3 flex-1">
+                  <p>{{ message }}</p>
+                </div>
+              </div>
+              <button type="button" class="flash-close ml-4 flex-shrink-0">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="flex flex-col lg:flex-row w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+    
+      <div class="info-panel text-white p-8 lg:p-12 lg:w-2/5 flex flex-col justify-center">
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold mb-2">Pool Watch</h1>
+          <div class="feature-item flex items-start space-x-3">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+              <img src="/static/img/cctv_favicon.svg" alt="CCTV Monitor" 
+                class="w-full h-full object-contain p-1">
+            </div>
+            <div class="flex flex-col justify-center">
+        <p class="text-blue-100">Computer Vision-Based Drowning Detection System</p>
+      </div>
+          </div>
+        </div>
+
+            <!-- Terms & Policy -->
+            <div class="mt-6">
+        <!-- Button -->
+        <button id="togglePolicy" class="flex items-center justify-between w-full bg-white bg-opacity-20 px-4 py-2 rounded-lg text-white font-semibold focus:outline-none">
+          Terms & Policy
+          <i id="arrowIcon" class="fas fa-chevron-up transition-transform duration-300"></i>
+        </button>
+
+        <!-- Content (open by default) -->
+        <div id="policyContent" class="mt-2 p-4 bg-white bg-opacity-10 rounded-lg text-blue-100 text-sm space-y-3 max-h-72 overflow-y-auto">
+          <p class="font-semibold">By using Pool Watch, you agree to the following standard terms and policies:</p>
+          <ul class="list-disc list-inside space-y-2">
+            <li><strong>Acceptance of Terms:</strong> By accessing and using this system, you agree to comply with these terms.</li>
+            <li><strong>Use of Service:</strong> Pool Watch is an assistive monitoring system and should not replace lifeguards or direct human supervision.</li>
+            <li><strong>Privacy & Data Collection:</strong> We may collect data such as video streams, system logs, and user activity. This data will not be shared without proper authorization.</li>
+            <li><strong>User Responsibilities:</strong> Users must provide accurate information, use the system responsibly, and ensure compliance with safety rules.</li>
+            <li><strong>Prohibited Activities:</strong> Users may not misuse alerts, attempt unauthorized access, tamper with the system, or share sensitive data without consent.</li>
+            <li><strong>Security:</strong> The system uses protective measures, but users must also take steps to maintain secure access (e.g., strong passwords).</li>
+            <li><strong>Intellectual Property:</strong> All software, content, and branding of Pool Watch remain the property of its developers.</li>
+            <li><strong>Limitations of Liability:</strong> Pool Watch does not guarantee prevention of all accidents. The developers are not liable for damages or harm arising from use or misuse of the system.</li>
+            <li><strong>Disclaimer of Warranties:</strong> The service is provided "as is" without warranties of any kind regarding performance or accuracy.</li>
+            <li><strong>Governing Law & Jurisdiction:</strong> These terms are governed by applicable local laws. Any disputes must be handled under the jurisdiction of the relevant courts.</li>
+            <li><strong>Updates to Terms:</strong> We may update these policies at any time. Continued use of the system means acceptance of updated terms.</li>
+          </ul>
+        </div>
+      </div>
+
+  
+
+        <div class="mt-auto pt-8 border-t border-blue-300 border-opacity-30">
+          <p class="text-blue-100">Already have an account?</p>
+          <a href="{{ url_for('login') }}" class="inline-flex items-center mt-2 font-semibold text-white group">
+            Sign in to your account
+            <i class="fas fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
+          </a>
+        </div>
+      </div>
+
+    
+    <div class="p-8 lg:p-12 lg:w-3/5">
+      <div class="max-w-md mx-auto">
+        <h2 class="text-3xl font-bold text-blue-900 mb-2">Sign up for Pool Watch</h2>
+        <p class="text-gray-600 mb-8">Create your account to access the monitoring system</p>
+
+        <!-- Form validation errors (inline display, not toast) -->
+        {% if form.errors %}
+          <div class="mb-6 px-4 py-3 rounded-lg bg-red-100 text-red-700 border border-red-300 text-sm">
+            <strong>Please fix the following errors:</strong>
+            <ul class="mt-1 list-disc list-inside">
+              {% for field, errors in form.errors.items() %}
+                {% for error in errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <form id="signupForm" action="{{ url_for('signup') }}" method="POST" class="space-y-5">
+          {{ form.hidden_tag() }}
+
+          <!-- Full Name -->
+          <div>
+            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <div class="relative">
+              <i class="fas fa-user absolute left-3 top-3 text-gray-400"></i>
+              <input type="text" id="fullName" name="fullName" required placeholder="Juan Dela Cruz"
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none {% if form.fullName.errors %}border-red-500{% endif %}"
+                value="{{ form.fullName.data if form.fullName.data }}">
+            </div>
+            {% if form.fullName.errors %}
+              <p class="text-red-600 text-sm mt-1 flex items-center">
+                <i class="fas fa-exclamation-circle mr-1"></i> {{ form.fullName.errors[0] }}
+              </p>
+            {% endif %}
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <div class="relative">
+              <i class="fas fa-envelope absolute left-3 top-3 text-gray-400"></i>
+              <input type="email" id="email" name="email" required placeholder="juandelacruz@gmail.com"
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none {% if form.email.errors %}border-red-500{% endif %}"
+                value="{{ form.email.data if form.email.data }}">
+            </div>
+            {% if form.email.errors %}
+              <p class="text-red-600 text-sm mt-1 flex items-center">
+                <i class="fas fa-exclamation-circle mr-1"></i> {{ form.email.errors[0] }}
+              </p>
+            {% endif %}
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <div class="relative">
+              <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+              <input type="password" id="password" name="password" required
+                class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none {% if form.password.errors %}border-red-500{% endif %}">
+              <button type="button" onclick="togglePasswordVisibility('password', 'passwordIcon')"
+                class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-blue-600">
+                <i id="passwordIcon" class="fas fa-eye"></i>
+              </button>
+            </div>
+            
+            <div class="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded-lg">
+              <p class="font-medium mb-1">Password must meet ALL requirements:</p>
+               <ul class="space-y-1 pl-4 list-none text-gray-600">
+                <li id="length" class="password-requirement unmet flex items-center gap-1">
+                  <i class="fas fa-circle-xmark text-red-500"></i>
+                  <span>At least 8 characters</span>
+                </li>
+                <li id="uppercase" class="password-requirement unmet flex items-center gap-1">
+                  <i class="fas fa-circle-xmark text-red-500"></i>
+                  <span>At least 1 uppercase letter (A–Z)</span>
+                </li>
+                <li id="lowercase" class="password-requirement unmet flex items-center gap-1">
+                  <i class="fas fa-circle-xmark text-red-500"></i>
+                  <span>At least 1 lowercase letter (a–z)</span>
+                </li>
+                <li id="number" class="password-requirement unmet flex items-center gap-1">
+                  <i class="fas fa-circle-xmark text-red-500"></i>
+                  <span>At least 1 number (0–9)</span>
+                </li>
+                <li id="special" class="password-requirement unmet flex items-center gap-1">
+                  <i class="fas fa-circle-xmark text-red-500"></i>
+                  <span>At least 1 special character (!@#$%^&amp;*)</span>
+                </li>
+              </ul>
+            </div>
+            
+            {% if form.password.errors %}
+              <p class="text-red-600 text-sm mt-1 flex items-center">
+                <i class="fas fa-exclamation-circle mr-1"></i> {{ form.password.errors[0] }}
+              </p>
+            {% endif %}
+          </div>
+
+          <!-- Confirm Password -->
+          <div>
+            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+            <div class="relative">
+              <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+              <input type="password" id="confirmPassword" name="confirmPassword" required
+                class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none {% if form.confirmPassword.errors %}border-red-500{% endif %}">
+              <button type="button" onclick="togglePasswordVisibility('confirmPassword', 'confirmPasswordIcon')"
+                class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-blue-600">
+                <i id="confirmPasswordIcon" class="fas fa-eye"></i>
+              </button>
+            </div>
+            {% if form.confirmPassword.errors %}
+              <p class="text-red-600 text-sm mt-1 flex items-center">
+                <i class="fas fa-exclamation-circle mr-1"></i> {{ form.confirmPassword.errors[0] }}
+              </p>
+            {% endif %}
+          </div>
+
+          <!-- Terms & Policies -->
+          <div class="flex items-start">
+            <input id="terms" name="terms" type="checkbox" required
+              class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 {% if form.terms.errors %}border-red-500{% endif %}">
+            <label for="terms" class="ml-2 text-sm text-gray-600">
+              I agree to the 
+              <a href="#" class="text-blue-600 font-semibold hover:underline">Terms and Policies</a>
+            </label>
+          </div>
+          {% if form.terms.errors %}
+            <p class="text-red-600 text-sm mt-1 flex items-center">
+              <i class="fas fa-exclamation-circle mr-1"></i> {{ form.terms.errors[0] }}
+            </p>
+          {% endif %}
+
+          <!-- Submit -->
+          <button type="submit"
+            class="w-full py-3 btn-gradient text-white font-semibold rounded-lg shadow-md transition duration-300">
+            Create Account
+          </button>
+        </form>
+
+        <p class="text-center text-xs text-gray-500 mt-6">© 2025 Pool Watch Monitoring System</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Password visibility toggle
+    function togglePasswordVisibility(inputId, iconId) {
+      const passwordInput = document.getElementById(inputId);
+      const passwordIcon = document.getElementById(iconId);
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        passwordIcon.classList.remove('fa-eye');
+        passwordIcon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        passwordIcon.classList.remove('fa-eye-slash');
+        passwordIcon.classList.add('fa-eye');
+      }
+    }
+    
+    // Password validation with visual feedback
+    document.getElementById('password').addEventListener('input', function() {
+      const password = this.value;
+      
+      // Get all requirement elements
+      const requirements = {
+        length: document.getElementById('length'),
+        uppercase: document.getElementById('uppercase'),
+        lowercase: document.getElementById('lowercase'),
+        number: document.getElementById('number'),
+        special: document.getElementById('special')
+      };
+      
+      // Check each requirement and update UI
+      updateRequirement(requirements.length, password.length >= 8);
+      updateRequirement(requirements.uppercase, /[A-Z]/.test(password));
+      updateRequirement(requirements.lowercase, /[a-z]/.test(password));
+      updateRequirement(requirements.number, /[0-9]/.test(password));
+      updateRequirement(requirements.special, /[!@#$%^&*]/.test(password));
+    });
+    
+    // Helper function to update requirement status
+    function updateRequirement(element, isMet) {
+      const icon = element.querySelector('i');
+      
+      if (isMet) {
+        element.classList.remove('unmet');
+        element.classList.add('met');
+        icon.classList.remove('fa-circle-xmark', 'text-red-500');
+        icon.classList.add('fa-circle-check', 'text-green-500');
+      } else {
+        element.classList.remove('met');
+        element.classList.add('unmet');
+        icon.classList.remove('fa-circle-check', 'text-green-500');
+        icon.classList.add('fa-circle-xmark', 'text-red-500');
+      }
+    }
+    
+    // Check if all password requirements are met
+    function isPasswordValid(password) {
+      return password.length >= 8 &&
+             /[A-Z]/.test(password) &&
+             /[a-z]/.test(password) &&
+             /[0-9]/.test(password) &&
+             /[!@#$%^&*]/.test(password);
+    }
+    
+    // Form validation
+    document.getElementById("signupForm").addEventListener("submit", function (e) {
+      let isValid = true;
+      
+      // Clear previous errors
+      document.querySelectorAll(".border-red-500").forEach(el => el.classList.remove("border-red-500"));
+      
+      // Full name validation
+      const fullname = document.getElementById("fullName").value.trim();
+      if (!fullname) {
+        showError("fullName", "Full name cannot be blank.");
+        isValid = false;
+      }
+      
+      // Email validation
+      const email = document.getElementById("email").value.trim();
+      if (!email) {
+        showError("email", "Email cannot be blank.");
+        isValid = false;
+      } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+        showError("email", "Please enter a valid email address.");
+        isValid = false;
+      }
+      
+      // Password validation - ALL requirements must be met
+      const password = document.getElementById("password").value;
+      if (!isPasswordValid(password)) {
+        showError("password", "Password must meet ALL requirements listed below.");
+        isValid = false;
+      }
+      
+      // Confirm Password validation
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      if (confirmPassword !== password) {
+        showError("confirmPassword", "Passwords do not match.");
+        isValid = false;
+      }
+      
+      // Terms validation
+      if (!document.getElementById("terms").checked) {
+        const termsLabel = document.querySelector('label[for="terms"]');
+        const termsError = document.createElement('p');
+        termsError.className = 'text-red-600 text-sm mt-1 flex items-center terms-error';
+        termsError.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i> You must agree to the Terms and Policies.';
+        
+        // Remove existing error if present
+        const existingError = document.querySelector('.terms-error');
+        if (existingError) {
+          existingError.remove();
+        }
+        
+        termsLabel.parentNode.appendChild(termsError);
+        isValid = false;
+      }
+      
+      if (!isValid) {
+        e.preventDefault();
+        // Scroll to first error
+        const firstError = document.querySelector('.border-red-500, .terms-error');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    });
+    
+    function showError(fieldId, message) {
+      const field = document.getElementById(fieldId);
+      field.classList.add("border-red-500");
+      
+      // Look for existing error message
+      let errorElement = field.parentElement.nextElementSibling;
+      
+      // If no error element exists or it's not an error paragraph, create one
+      if (!errorElement || !errorElement.classList.contains("text-red-600")) {
+        errorElement = document.createElement('p');
+        errorElement.className = 'text-red-600 text-sm mt-1 flex items-center';
+        field.parentElement.insertAdjacentElement('afterend', errorElement);
+      }
+      
+      errorElement.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> ${message}`;
+      errorElement.style.display = 'flex';
+    }
+
+    const toggleBtn = document.getElementById("togglePolicy");
+    const content = document.getElementById("policyContent");
+    const arrow = document.getElementById("arrowIcon");
+
+    toggleBtn.addEventListener("click", () => {
+      content.classList.toggle("hidden");
+      arrow.classList.toggle("rotate-180");
+    });
+
+    // Flash message auto-dismiss functionality
+    function initializeFlashMessages() {
+      const flashMessages = document.querySelectorAll('.flash-message:not([data-initialized])');
+      
+      flashMessages.forEach(message => {
+        message.setAttribute('data-initialized', 'true');
+        
+        const dismissTimer = setTimeout(() => {
+          dismissFlashMessage(message);
+        }, 5000);
+        
+        const closeBtn = message.querySelector('.flash-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            clearTimeout(dismissTimer);
+            dismissFlashMessage(message);
+          });
+        }
+        
+        message.addEventListener('mouseenter', function() {
+          clearTimeout(dismissTimer);
+        });
+        
+        message.addEventListener('mouseleave', function() {
+          const newTimer = setTimeout(() => {
+            dismissFlashMessage(message);
+          }, 5000);
+          message.setAttribute('data-dismiss-timer', newTimer);
+        });
+        
+        message.setAttribute('data-dismiss-timer', dismissTimer);
+      });
+    }
+
+    function dismissFlashMessage(message) {
+      message.classList.add('dismissing');
+      
+      setTimeout(() => {
+        if (message.parentNode) {
+          message.remove();
+        }
+      }, 300);
+    }
+
+    window.addEventListener('beforeunload', function() {
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach(message => {
+        const timerId = message.getAttribute('data-dismiss-timer');
+        if (timerId) {
+          clearTimeout(parseInt(timerId));
+        }
+      });
+    });
+
+    // Initialize flash messages on page load
+    document.addEventListener('DOMContentLoaded', initializeFlashMessages);
+  </script>
+</body>
+</html>

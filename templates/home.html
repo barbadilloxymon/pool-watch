@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page - Pool Watch</title>
+    <script src="{{ url_for('static', filename='js/home-tailwind-config.js') }}"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/home-style.css">
+    <link rel="stylesheet" href="/static/css/flask-message-style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/img/cctv_favicon.svg">
+</head>
+<body class="bg-gradient-to-br from-light-blue to-white min-h-screen"
+      data-page="home"
+      data-logged-in="{{ logged_in|tojson }}"
+      data-stream-url="{{ url_for('stream') }}"
+      data-login-url="{{ url_for('login') }}">
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="mobile-overlay fixed inset-0 bg-black/50 z-40 lg:hidden" data-action="close-sidebar"></div>
+    
+    <!-- Navigation - Fixed at top -->
+    <nav class="gradient-bg shadow-lg fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <!-- Mobile Menu Button - MOVED TO LEFT -->
+                    <button id="mobile-menu-button" class="lg:hidden text-white text-2xl p-2 mr-2" data-action="toggle-sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <!-- Logo - clickable to home -->
+                    <a href="/" class="flex items-center space-x-3">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center backdrop-blur-sm">             
+                            <img src="static/img/cctv_favicon.svg" alt="CCTV Monitor" class="w-2/3 h-2/3 object-contain">           
+                        </div>           
+                        <h1 class="text-xl sm:text-2xl font-bold text-white tracking-wide">Pool Watch</h1>
+                    </a>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden lg:flex items-center space-x-8">
+                    <a href="#home" class="text-white/80 hover:text-white transition-colors font-medium">Home</a>
+                    <a href="#about" class="text-white/80 hover:text-white transition-colors font-medium">About</a>
+                    <a href="#tutorial" class="text-white/80 hover:text-white transition-colors font-medium">Tutorial</a>
+                    <a href="#safety" class="text-white/80 hover:text-white transition-colors font-medium">Safety</a>
+                    <!-- Emergency Contacts Link in Header -->
+                    <a href="#emergency" class="flex items-center text-white/80 hover:text-white transition-colors font-medium">
+                        <i class="fas fa-phone-alt mr-2 text-sm"></i>
+                        Emergency
+                    </a>
+                    {% if not logged_in %}
+                    <a href="{{ url_for('login') }}" class="bg-white/20 backdrop-blur-sm text-white px-6 py-2 rounded-full hover:bg-white/30 transition-all border border-white/30 font-medium">
+                        Get Started
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Placeholder to maintain spacing on mobile -->
+                <div class="lg:hidden w-10 h-10"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages-container">
+                {% for category, message in messages %}
+                    <div class="flash-message" data-category="{{ category }}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start flex-1">
+                                <div class="flex-shrink-0 mt-0.5">
+                                    {% if category == 'success' %}
+                                        <i class="fas fa-check-circle"></i>
+                                    {% elif category == 'error' or category == 'danger' %}
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    {% else %}
+                                        <i class="fas fa-info-circle"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <p>{{ message }}</p>
+                                </div>
+                            </div>
+                            <button type="button" class="flash-close ml-4 flex-shrink-0">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Mobile Sidebar - LEFT SIDEBAR -->
+    <aside id="mobileSidebar" class="mobile-sidebar fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-50 lg:hidden">
+        <div class="gradient-bg p-6 border-b border-white/20">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <img src="static/img/cctv_favicon.svg" alt="CCTV Monitor" class="w-2/3 h-2/3 object-contain">
+                    </div>
+                    <h2 class="text-lg font-semibold text-white">Pool Watch</h2>
+                </div>
+                <button class="p-2 rounded-lg text-white hover:bg-white/10" data-action="toggle-sidebar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <nav class="flex-1 py-4">
+            <div class="space-y-1 px-3">
+                <a href="#home" data-close-sidebar="true" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-home w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Home</span>
+                </a>
+                <a href="#about" data-close-sidebar="true" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-info-circle w-5 h-5 mr-3"></i>
+                    <span class="font-medium">About</span>
+                </a>
+                <a href="#tutorial" data-close-sidebar="true" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-play-circle w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Tutorial</span>
+                </a>
+                <a href="#safety" data-close-sidebar="true" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-shield-alt w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Safety</span>
+                </a>
+                <!-- Emergency Contacts Link in Mobile Sidebar -->
+                <a href="#emergency" data-close-sidebar="true" class="flex items-center px-4 py-3 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors">
+                    <i class="fas fa-phone-alt w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Emergency Contacts</span>
+                </a>
+            </div>
+        </nav>
+        
+        {% if not logged_in %}
+        <div class="p-3 border-t border-gray-100">
+            <a href="{{ url_for('login') }}" class="w-full bg-pool-blue text-white px-4 py-3 rounded-lg hover:bg-sky-blue transition-all font-medium flex items-center justify-center">
+                <i class="fas fa-rocket mr-2"></i>
+                Get Started
+            </a>
+        </div>
+        {% endif %}
+    </aside>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative overflow-hidden hero-gradient pt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+            <div class="text-center">
+                <div class="floating-animation mb-8 scroll-animate fade-down">
+                    <div class="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                        <img src="static/img/cctv_favicon.svg" alt="Pool Watch Monitor" class="w-12 h-12 object-contain">
+                    </div>
+                </div>
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 scroll-animate fade-up stagger-1">
+                    Welcome to <span class="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">Pool Watch</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto leading-relaxed scroll-animate fade-up stagger-2">
+                    Computer Vision-Based Drowning Detection System that keeps watch because every second counts.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center scroll-animate fade-up stagger-3">
+                    <button class="bg-white text-pool-blue px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center" data-action="view-stream">
+                        <i class="fas fa-play mr-2"></i>
+                        View Stream
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 w-full">
+            <svg class="w-full h-20" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,32L48,37.3C96,43,192,53,288,58.7C384,64,480,64,576,58.7C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64V120H1392C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120H0V32Z" fill="white"/>
+            </svg>
+        </div>
+    </section>
+
+    {{ about_section|safe }}
+    {{ tutorial_section|safe }}
+    {{ safety_section|safe }}
+
+    <!-- Footer -->
+    <footer class="bg-white text-black py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-t border-gray-300 mt-8 pt-8 text-center scroll-animate fade-up">
+                <p class="text-gray-600">© 2025 Pool Watch. All rights reserved. Keeping your pool safe, one watch at a time.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollTopBtn" class="scroll-top-btn fixed bottom-8 right-8 bg-pool-blue text-white w-12 h-12 rounded-full shadow-lg hover:shadow-xl z-40 flex items-center justify-center">
+        <i class="fas fa-arrow-up text-xl"></i>
+    </button>
+
+    <script src="{{ url_for('static', filename='js/home.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/home-tailwind-config.js') }}" defer></script>
+</body>
+</html>

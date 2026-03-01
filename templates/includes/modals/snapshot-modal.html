@@ -1,0 +1,29 @@
+<div id="snapshotModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+  <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+  <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded shadow-lg z-50 overflow-y-auto">
+    <div class="modal-content py-4 text-left px-6">
+      <div class="flex justify-between items-center pb-3 border-b">
+        <p class="text-xl font-bold">Snapshot</p>
+        <button class="close-modal focus:outline-none" onclick="Modal.close('snapshotModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="my-4">
+        <div class="bg-black p-2 rounded-md">
+          <img id="snapshotImage" class="w-full h-auto" src="" alt="Snapshot">
+        </div>
+        <div class="mt-4 text-center text-sm text-gray-600">
+          <p>Camera: <span id="snapshotCameraName">-</span></p>
+          <p>Date & Time: <span id="snapshotDateTime">-</span></p>
+        </div>
+      </div>
+      
+      <div class="flex justify-end space-x-4 mt-6">
+        <button type="button" id="downloadSnapshotBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+          <i class="fas fa-download mr-1"></i> Download
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

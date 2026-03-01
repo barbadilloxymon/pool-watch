@@ -1,0 +1,294 @@
+/* Flash Messages Container - Top Right Position */
+.flash-messages-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 320px;
+  width: auto;
+  pointer-events: none;
+}
+
+/* Individual Flash Message */
+.flash-message {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border: 2px solid #10b981;
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 280px;
+  pointer-events: auto;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Green accent bar on left */
+.flash-message::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+}
+
+/* Success Message - Green & White Theme */
+.flash-message[data-category="success"] {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border-color: #10b981;
+}
+
+.flash-message[data-category="success"] i.fas {
+  color: #10b981;
+}
+
+.flash-message[data-category="success"] p {
+  color: #065f46;
+  font-weight: 600;
+}
+
+/* Error Message - Green & White Theme */
+.flash-message[data-category="error"],
+.flash-message[data-category="danger"] {
+  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+  border-color: #ef4444;
+}
+
+.flash-message[data-category="error"]::before,
+.flash-message[data-category="danger"]::before {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+}
+
+.flash-message[data-category="error"] i.fas,
+.flash-message[data-category="danger"] i.fas {
+  color: #ef4444;
+}
+
+.flash-message[data-category="error"] p,
+.flash-message[data-category="danger"] p {
+  color: #991b1b;
+  font-weight: 600;
+}
+
+/* Warning Message - Green & White Theme */
+.flash-message[data-category="warning"] {
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+  border-color: #f59e0b;
+}
+
+.flash-message[data-category="warning"]::before {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+}
+
+.flash-message[data-category="warning"] i.fas {
+  color: #f59e0b;
+}
+
+.flash-message[data-category="warning"] p {
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* Info Message - Green & White Theme */
+.flash-message[data-category="info"] {
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+  border-color: #0ea5e9;
+}
+
+.flash-message[data-category="info"]::before {
+  background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
+}
+
+.flash-message[data-category="info"] i.fas {
+  color: #0ea5e9;
+}
+
+.flash-message[data-category="info"] p {
+  color: #1e40af;
+  font-weight: 600;
+}
+
+/* Flash Message Content */
+.flash-message-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Flash Message Icon */
+.flash-message i.fas {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
+/* Flash Message Text */
+.flash-message p {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+  flex: 1;
+}
+
+/* Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+    max-height: 100px;
+    margin-bottom: 10px;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+    max-height: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* Message dismiss animation */
+.flash-message.dismissing {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
+/* Hover Effect */
+.flash-message:hover {
+  transform: translateX(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* Progress Bar for Auto-dismiss */
+.flash-message::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  transform: scaleX(1);
+  transform-origin: left;
+  animation: progressBar 5s linear forwards;
+}
+
+.flash-message[data-category="error"]::after,
+.flash-message[data-category="danger"]::after {
+  background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
+.flash-message[data-category="warning"]::after {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.flash-message[data-category="info"]::after {
+  background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%);
+}
+
+@keyframes progressBar {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .flash-messages-container {
+    right: 12px;
+    left: 12px;
+    top: 70px;
+    max-width: none;
+  }
+  
+  .flash-message {
+    min-width: auto;
+    width: 100%;
+    padding: 14px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .flash-messages-container {
+    top: 68px;
+    right: 8px;
+    left: 8px;
+  }
+  
+  .flash-message {
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+  
+  .flash-message i.fas {
+    font-size: 1.1rem;
+    width: 20px;
+  }
+  
+  .flash-message p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Tablet Adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .flash-messages-container {
+    right: 16px;
+    max-width: 300px;
+  }
+}
+
+/* Large Screens */
+@media (min-width: 1440px) {
+  .flash-messages-container {
+    right: 40px;
+    max-width: 350px;
+  }
+}
+
+/* Accessibility - Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .flash-message {
+    animation: none;
+  }
+  
+  .flash-message::after {
+    animation: none;
+    display: none;
+  }
+  
+  .flash-message:hover {
+    transform: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .flash-messages-container {
+    display: none;
+  }
+}

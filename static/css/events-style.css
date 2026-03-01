@@ -1,0 +1,97 @@
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.blink {
+    animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+}
+
+.snapshot-card {
+    transition: all 0.3s ease;
+}
+
+/* Event card layout improvements */
+.event-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.event-card > div {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .event-card > div {
+        flex-direction: row;
+    }
+}
+
+/* Image modal improvements - Full Screen */
+#imageModal {
+    backdrop-filter: blur(4px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+#imageModal > div {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#imageModal img {
+    max-width: 98vw;
+    max-height: 98vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* Ensure proper image display in cards */
+.event-card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Smooth modal transition */
+#imageModal {
+    animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

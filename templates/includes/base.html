@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="autocomplete" content="off">
+  <title>{% block title %}Pool Watch Dashboard{% endblock %}</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <link rel="icon" type="image/svg+xml" href="/static/img/cctv_favicon.svg">
+  <link rel="stylesheet" href="/static/css/main-style.css">
+  <link rel="stylesheet" href="/static/css/base-style.css">
+  <link rel="stylesheet" href="/static/css/flask-message-style.css">
+  
+  {% block extra_css %}{% endblock %}
+  
+</head>
+
+<body class="bg-gray-100 h-screen flex flex-col">
+  
+  <div id="mobileOverlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="gradient-bg shadow-lg">
+    <div class="px-2 sm:px-4 lg:px-6">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo and Toggle Section -->
+        <div class="flex items-center space-x-4">
+          <!-- Toggle Button (mobile) -->
+          <button 
+            id="toggleSidebar" 
+            class="p-2 rounded-lg text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-200 lg:hidden"
+            onclick="toggleSidebar()"
+          >
+            <i class="fas fa-bars text-xl"></i>
+          </button>
+
+          
+          <a href="{{ url_for('home') }}" class="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition-opacity">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-lg flex items-center justify-center">
+                <img src="/static/img/cctv_favicon.svg" alt="Pool Watch" class="w-2/3 h-2/3 object-contain">
+            </div>
+            <h1 class="text-xl sm:text-2xl font-bold text-white">Pool Watch</h1>
+        </a>
+
+        </div>
+        
+      </div>
+    </div>
+
+   <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages-container">
+                {% for category, message in messages %}
+                    <div class="flash-message" data-category="{{ category }}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start flex-1">
+                                <div class="flex-shrink-0 mt-0.5">
+                                    {% if category == 'success' %}
+                                        <i class="fas fa-check-circle"></i>
+                                    {% elif category == 'error' or category == 'danger' %}
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    {% else %}
+                                        <i class="fas fa-info-circle"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <p>{{ message }}</p>
+                                </div>
+                            </div>
+                            <button type="button" class="flash-close ml-4 flex-shrink-0">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+  </header>
+
+
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar -->
+    <aside 
+      id="sidebar" 
+      class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-xl sidebar-transition lg:transform-none flex flex-col h-full"
+    >
+      <!-- Sidebar Header -->
+      <div class="p-6 border-b border-gray-100 lg:hidden gradient-bg">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+               <img src="/static/img/cctv_favicon.svg" alt="CCTV Monitor" 
+                class="w-2/3 h-2/3 object-contain">
+            </div>
+            <h2 class="text-lg font-semibold text-white ml-2">Menu</h2>
+          </div>
+          <button 
+            onclick="toggleSidebar()"
+            class="p-2 rounded-lg text-white hover:bg-white/10 lg:hidden"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="hidden lg:block p-6 border-b border-gray-100">
+        <h2 class="text-lg font-semibold text-gray-900">Menu</h2>
+      </div>
+      
+      <!-- Navigation Menu -->
+      <nav class="flex-1 py-4 overflow-y-auto">
+        <div class="space-y-1 px-3">
+          <a 
+            href="{{ url_for('stream') }}" 
+            class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 {% if active_page == 'stream' %}active-nav{% endif %}"
+          >
+            <i class="fas fa-video w-5 h-5 mr-3"></i>
+            <span class="font-medium">Stream</span>
+          </a>
+          
+          <!-- Camera Management - Admin Only -->
+          {% if session.role == 'admin' or session.is_owner %}
+          <a 
+            href="{{ url_for('camera_management') }}" 
+            class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 {% if active_page == 'camera_management' %}active-nav{% endif %}"
+          >
+            <i class="fas fa-camera w-5 h-5 mr-3"></i>
+            <span class="font-medium">Cameras</span>
+          </a>
+          {% endif %}
+
+          <a 
+            href="{{ url_for('events') }}" 
+            class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 {% if active_page == 'events' %}active-nav{% endif %}"
+          >
+            <i class="fas fa-clipboard-list w-5 h-5 mr-3"></i>
+            <span class="font-medium">Events</span>
+          </a>
+
+          <!-- User Management - Admin Only -->
+          {% if session.role == 'admin' or session.is_owner %}
+          <a 
+            href="{{ url_for('user_management') }}" 
+            class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 {% if active_page == 'user_management' %}active-nav{% endif %}"
+          >
+            <i class="fas fa-users w-5 h-5 mr-3"></i>
+            <span class="font-medium">Users</span>
+          </a>
+          {% endif %}
+        </div>
+      </nav>
+
+      <!-- User Section -->
+      <div class="relative p-3 border-t border-gray-100">
+        <button 
+          id="userMenuButton"
+          onclick="toggleAccountMenu()"
+          class="w-full flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <div class="avatar-circle mr-3" style="width: 40px; height: 40px; font-size: 1rem;">
+            {{ session.full_name[0].upper() if session.full_name else (session.email[0].upper() if session.email else 'U') }}
+          </div>
+          <div class="flex-1 text-left overflow-hidden">
+            <p class="font-medium text-sm text-gray-900 truncate" id="sidebarUserName">
+              {{ session.full_name or 'User Name' }}
+            </p>
+            <p class="text-xs text-gray-500 truncate">
+              {{ session.role|title or 'User' }}
+            </p>
+          </div>
+          <i class="fas fa-chevron-up text-gray-400 text-sm transition-transform duration-200" id="menuChevron"></i>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div 
+          id="accountMenu" 
+          class="absolute bottom-full left-3 right-3 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden opacity-0 invisible transition-all duration-200 transform origin-bottom"
+          style="z-index: 100;"
+        >
+          <button
+            onclick="openAccountDetailsModal()"
+            class="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors text-left"
+          >
+            <i class="fas fa-user w-5 h-5 mr-3 text-blue-600"></i>
+            <span class="font-medium">My Account</span>
+          </button>
+          <div class="border-t border-gray-100"></div>
+           <a
+            href="{{ url_for('logout') }}"
+            class="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <i class="fas fa-sign-out-alt w-5 h-5 mr-3"></i>
+            <span class="font-medium">Logout</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content section -->
+    <main class="flex-1 overflow-auto bg-gray-200 p-4 lg:ml-0">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- Include Modals -->
+  {% include "includes/account_details_modal.html" %}
+  {% include "includes/change_password_modal.html" %}
+  {% include "includes/delete_account_modal.html" %}
+
+  
+  {% block extra_modals %}{% endblock %}
+
+  <!-- JavaScript Files -->
+  <script src="/static/js/base.js"></script>
+  <script src="/static/js/modals.js"></script>
+  <script src="/static/js/account.js"></script>
+  
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

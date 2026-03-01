@@ -1,0 +1,40 @@
+ @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .password-requirement {
+      transition: all 0.3s ease;
+    }
+    
+    .password-requirement.met {
+      color: #10b981;
+    }
+    
+    .password-requirement.unmet {
+      color: #6b7280;
+    }
+    
+    .btn-gradient {
+      background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-gradient:hover {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.4);
+    }
+    
+    .info-panel {
+      background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+    }
+    
+    .feature-item {
+      transition: all 0.3s ease;
+    }
+    
+    .feature-item:hover {
+      transform: translateX(5px);
+    }

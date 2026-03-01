@@ -1,0 +1,230 @@
+{% extends "includes/base.html" %}
+
+{% block title %}Live Stream - Pool Watch{% endblock %}
+
+{% set active_page = 'stream' %}
+
+{% block content %}
+{% if cameras|length == 0 %}
+  <!-- No cameras configured -->
+  <div class="bg-white rounded-lg shadow-sm p-6 h-full flex flex-col items-center justify-center text-center">
+    <div class="text-6xl text-blue-300 mb-4">
+      <i class="fas fa-video-slash"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">No Cameras Configured</h2>
+    <p class="text-gray-600 mb-8 leading-relaxed">
+      Start monitoring your pool by adding your first RTSP camera connection.
+    </p>
+    <!-- Add Camera Button - Admin Only -->
+    {% if session.role == 'admin' or session.is_owner %}
+    <a href="{{ url_for('camera_management') }}"
+      class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
+      <i class="fas fa-plus mr-2"></i> Add RTSP Camera
+    </a>
+    {% else %}
+    <p class="text-gray-500 italic">Contact your administrator to add cameras</p>
+    {% endif %}
+  </div>
+
+{% else %}
+  <input type="hidden" id="currentCameraId" value="{{ current_camera.id if current_camera else '' }}">
+  
+  
+  
+  <div class="flex flex-col lg:flex-row gap-6 h-full">
+    <!-- Main camera view -->
+    <div class="lg:w-3/4 flex flex-col">
+      <!-- Status Bar with AUTO-CHANGING STATUS -->
+      <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <!-- Live Status -->
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+              <div class="relative">
+                <span id="liveIndicator" class="h-3 w-3 bg-red-500 rounded-full block"></span>
+                <span class="absolute h-3 w-3 bg-red-500 rounded-full animate-ping"></span>
+              </div>
+              <span class="font-semibold text-gray-900 text-sm sm:text-base">LIVE</span>
+              <div class="w-px h-4 bg-gray-300"></div>
+              <span id="connectionStatus" class="text-sm text-gray-600 font-medium">Connected</span>
+            </div>
+            <div class="hidden sm:block w-px h-6 bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+              <i class="fas fa-video text-blue-600"></i>
+              <span class="font-medium text-gray-800 text-sm sm:text-base" id="currentCameraName">{{ current_camera.name if current_camera else 'Main Camera' }}</span>
+            </div>
+          </div>
+          
+          <!-- AI Detection Status - AUTO-CHANGES -->
+          <div id="aiStatusContainer" class="flex items-center space-x-3">
+            <div id="aiStatusBadge" class="flex items-center space-x-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded-full transition-all duration-300">
+              <i id="aiStatusIcon" class="fas fa-shield-alt"></i>
+              <span id="aiStatusText" class="font-medium text-sm hidden sm:inline">AI Monitoring Active</span>
+              <span id="aiStatusTextMobile" class="font-medium text-xs sm:hidden">AI Active</span>
+            </div>
+            
+            <!-- Alarm Status Indicator (Read-only) -->
+            <div id="alarmStatus" class="hidden p-2.5 rounded-full bg-red-50 border border-red-200">
+              <i class="fas fa-bell text-red-600 text-sm sm:text-base animate-pulse"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+       <div class="relative bg-black rounded-xl shadow-lg overflow-hidden flex-grow">
+        <div id="cameraContainer" class="relative bg-black group" style="width: 100%; height: 70vh;">
+          <div id="cameraGrid" class="h-full w-full bg-black">
+            <div class="camera-feed h-full w-full flex justify-center items-center bg-black">
+              <div class="video-wrapper transition-transform duration-300 ease-out" style="width: 100%; max-width: 100%; height: 100%; background: black;">
+                <!-- DETECTION FEED - Shows bounding boxes and paths -->
+                <img id="videoFeed" 
+                     src="{{ url_for('detection_feed') }}{% if current_camera %}?camera_id={{ current_camera.id }}{% endif %}" 
+                     onerror="this.onerror=null;this.src='/static/img/no-signal.png';"
+                     alt="Live Camera Feed with AI Detection" 
+                     class="h-full w-full object-contain"
+                     style="background: black;">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Detection Overlay - HIDDEN BY DEFAULT -->
+          <div id="detectionOverlay" class="hidden absolute top-4 left-4 bg-gray-900 bg-opacity-90 text-white p-4 rounded-lg shadow-xl backdrop-blur-sm max-w-xs">
+            <div class="flex items-center space-x-2 mb-3">
+              <i class="fas fa-brain text-blue-400"></i>
+              <h4 class="font-semibold text-sm">AI Detection Stats</h4>
+            </div>
+            <div id="detectionResults" class="text-xs space-y-2">
+              <div class="flex justify-between">
+                <span class="text-gray-300">Active Tracks:</span>
+                <span id="activeTracksCount" class="font-bold text-white">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-300">Status:</span>
+                <span id="detectionStatusText" class="font-bold text-green-400">Normal</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Control Panel -->
+         <div class="absolute bottom-8 right-6">
+            <div class="relative">
+              <button id="dotMenuToggle" class="w-12 h-12 bg-gray-900 bg-opacity-80 hover:bg-opacity-90 text-white rounded-full shadow-xl transition-all duration-300 backdrop-blur-sm group hover:scale-110">
+                <i class="fas fa-ellipsis-h group-hover:rotate-90 transition-transform duration-300"></i>
+              </button>
+              
+              <div id="dotMenuPanel" class="absolute bottom-full right-0 mb-3 bg-gray-900 bg-opacity-95 backdrop-blur-md rounded-lg shadow-xl p-1.5 min-w-[240px] transform scale-95 opacity-0 pointer-events-none transition-all duration-300 origin-bottom-right">
+                
+                <div class="grid grid-cols-2 gap-1 mb-2 p-1">
+                  <button id="fullscreenBtn" class="control-btn" title="Fullscreen">
+                    <i class="fas fa-expand text-base"></i>
+                    <span class="text-[10px] mt-0.5">Full</span>
+                  </button>
+                  <button id="resetZoomBtn" class="control-btn" title="Reset Zoom">
+                    <i class="fas fa-sync-alt text-lg text-white"></i>
+                    <span class="text-[10px] mt-0.5">Reset</span>
+                  </button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-1 mb-2 p-1">
+                  <button id="zoomInBtn" class="control-btn" title="Zoom In">
+                    <i class="fas fa-search-plus text-base"></i>
+                    <span class="text-[10px] mt-0.5">Zoom +</span>
+                  </button>
+                  <button id="zoomOutBtn" class="control-btn" title="Zoom Out">
+                    <i class="fas fa-search-minus text-base"></i>
+                    <span class="text-[10px] mt-0.5">Zoom -</span>
+                  </button>
+                </div>
+                
+                <div class="w-full h-px bg-gray-600 mb-2"></div>
+                
+                <div class="space-y-1">
+                  <button id="snapshotBtn" class="menu-item">
+                    <i class="fas fa-camera w-4"></i>
+                    <span class="text-sm">Snapshot</span>
+                  </button>
+                  
+                  <button id="toggleDetectionBtn" class="menu-item flex items-center justify-between w-full px-2 py-1.5 text-left">
+                    <div class="flex items-center space-x-2">
+                      <i class="fas fa-brain w-5"></i>
+                      <span class="text-sm font-medium text-white">AI Stats</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Camera sidebar -->
+    <div class="lg:w-1/4">
+      <div class="bg-white rounded-xl shadow-sm h-full flex flex-col">
+        <!-- Fixed Header -->
+        <div class="flex justify-between items-center p-6 pb-4 flex-shrink-0 border-b border-gray-100">
+          <h3 class="font-bold text-gray-800 text-lg">Camera Views</h3>
+          <!-- Plus Button - Admin Only -->
+          {% if session.role == 'admin' or session.is_owner %}
+          <a href="{{ url_for('camera_management') }}" 
+            class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            title="Add Camera">
+            <i class="fas fa-plus text-sm"></i>
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Scrollable Camera List -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar px-6 py-4">
+          <div class="space-y-4">
+            {% for camera in cameras %}
+            <div class="camera-thumbnail group cursor-pointer">
+              <a href="{{ url_for('stream') }}?camera_id={{ camera.id }}" class="block">
+                <div class="relative rounded-xl overflow-hidden border-2 transition-all duration-300 {{ 'border-blue-500 ring-2 ring-blue-200' if current_camera and current_camera.id == camera.id else 'border-gray-200 group-hover:border-blue-300' }}">
+                  <div class="bg-gray-900 aspect-video relative overflow-hidden">
+                    <img src="{{ url_for('video_feed') }}?camera_id={{ camera.id }}&thumbnail=1" 
+                         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                         alt="{{ camera.name }}"
+                         onerror="this.src='/static/img/no-signal.png'">
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+                    
+                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                      <div class="flex justify-between items-end">
+                        <div>
+                          <h4 class="text-white font-semibold text-sm truncate">{{ camera.name }}</h4>
+                          <p class="text-gray-300 text-xs">{{ camera.location if camera.location else 'Pool Area' }}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                          <div class="status-dot {{ 'bg-green-500' if camera.active else 'bg-red-500' }} h-2 w-2 rounded-full"></div>
+                          <span class="text-white text-xs">{{ 'Online' if camera.active else 'Offline' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {% if current_camera and current_camera.id == camera.id %}
+                    <div class="absolute top-3 right-3 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                      <i class="fas fa-play mr-1"></i>Live
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% include "includes/modals/snapshot-modal.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/stream-style.css') }}">
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/modals.js') }}"></script>
+<script src="{{ url_for('static', filename='js/stream.js') }}"></script>
+{% endblock %}

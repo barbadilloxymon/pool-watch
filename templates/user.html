@@ -1,0 +1,180 @@
+{% extends "includes/base.html" %}
+
+{% block title %}User Management - Pool Watch{% endblock %}
+
+{% set active_page = 'user_management' %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-sm h-full flex flex-col">
+  <!-- Fixed Header Section -->
+  <div class="flex-shrink-0 p-4 md:p-6 border-b border-gray-100">
+    <!-- Title and Description -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-800">User Management</h2>
+        <p class="text-gray-600 mt-1">Manage user accounts and access permissions</p>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="relative w-full sm:w-64 ">
+        <input type="text" id="searchInput" placeholder="Search User..." 
+              class="w-full pl-10 pr-4 py-2 rounded-3xl border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <i class="fas fa-search text-blue-400"></i>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- All Users Header -->
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-gray-900">All Users</h3>
+    </div>
+
+  </div>
+
+  <!-- Scrollable Content Section -->
+  <div class="flex-1 overflow-y-auto p-4 md:p-6">
+    {% if users|length > 0 %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="usersContainer">
+      {% for user in users %}
+      {% set initial = user.full_name[0]|upper if user.full_name and user.full_name|length > 0 else user.email[0]|upper %}
+      <div class="user-card max-w-sm w-full bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-300 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <!-- Card Header -->
+        <div class="p-6 pb-4">
+          <div class="flex items-start">
+            <!-- User Initial Circle -->
+            <div class="h-14 w-14 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md font-bold text-xl">
+              {{ (user.full_name[0] if user.full_name else (user.email[0] if user.email else "U")) | upper }}
+            </div>
+
+            <!-- User Info -->
+            <div class="ml-4 flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <h4 class="text-lg font-semibold text-gray-900 truncate">
+                  {{ user.fullName or user.full_name or user.email.split('@')[0] }}
+                </h4>
+                <!-- FIXED: Admin is light blue, User is green -->
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                  {% if user.role == 'admin' %}bg-blue-100 text-blue-800
+                  {% else %}bg-green-100 text-green-800{% endif %}">
+                  {{ user.role|capitalize }}
+                </span>
+              </div>
+              <p class="text-sm text-gray-500 truncate mt-1">{{ user.email }}</p>
+            </div>
+          </div>
+        </div>
+
+        
+        <!-- Card Details -->
+        <div class="px-6 pb-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</p>
+                <!-- FIXED: Show actual UID instead of email -->
+                <p class="mt-1 text-sm text-gray-700 truncate" title="{{ user.uid }}">{{ user.uid[:12] }}...</p>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Created</p>
+                <p class="mt-1 text-sm text-gray-700">{{ user.createdAt|datetimeformat('%b %d, %Y') }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Card Footer with Actions -->
+        <div class="bg-gray-100 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+          <div class="text-xs text-gray-500">
+            Updated {{ user.updatedAt|datetimeformat('%b %d, %Y') if user.updatedAt else 'Never' }}
+          </div>
+          <div class="flex space-x-2">
+            {% if not user.is_owner %}
+            <button onclick="editUser('{{ user.email }}')" class="text-blue-600 hover:text-blue-800 hover:bg-blue-100 p-2 rounded-full transition" title="Edit User">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="confirmDeleteUser('{{ user.email }}')" class="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition" title="Delete User">
+              <i class="fas fa-trash"></i>
+            </button>
+            {% else %}
+            <span class="text-xs text-gray-400 italic px-2">Account Owner</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    <!-- No Results Message -->
+    <div id="noResults" class="no-results col-span-full py-12 text-center hidden">
+      <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+      <h3 class="text-lg font-medium text-gray-500">No users found</h3>
+      <p class="text-gray-400">Try adjusting your search terms</p>
+    </div>
+    
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-16 px-4 bg-white rounded-2xl shadow-sm border border-gray-200">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-blue-100 to-sky-100 mb-4">
+        <i class="fas fa-users text-blue-600 text-2xl"></i>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">No users yet</h3>
+      <p class="text-gray-500 max-w-md mx-auto">Get started by adding your first user to the system. Users can be assigned different roles and permissions.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="mt-4 flex md:mt-0 md:ml-4">
+        <!-- Floating Add User Button -->
+        <button id="addUserBtn" 
+                onclick="openAddUserModal()"
+                class="fixed bottom-14 right-14 w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 z-40">
+          <i class="fas fa-plus text-2xl sm:text-3xl"></i>
+        </button>
+      </div>
+</div>
+
+<style>
+#addUserBtn {
+  position: fixed;
+  pointer-events: auto;
+}
+
+.custom-scrollbar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+#addUserBtn:hover {
+  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.3), 0 10px 10px -5px rgba(59, 130, 246, 0.2);
+}
+
+#addUserBtn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 640px) {
+  #addUserBtn {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+</style>
+
+<!-- Include Modals -->
+{% include "includes/modals/add_user_modal.html" %}
+{% include "includes/modals/edit_user_modal.html" %}
+{% include "includes/modals/delete_user_modal.html" %}
+
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user-management-style.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/user-management-main.js"></script>
+<script src="/static/js/user-management-add.js"></script>
+<script src="/static/js/user-management-delete.js"></script>
+<script src="/static/js/user-management-edit.js"></script>
+{% endblock %}

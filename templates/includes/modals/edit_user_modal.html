@@ -1,0 +1,81 @@
+<!-- Edit_user_modal.html -->
+<div id="editUserModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 transition-opacity duration-300">
+  <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" style="pointer-events: none;"></div>
+  <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto max-h-screen">
+    <div class="modal-content py-4 text-left px-6">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center pb-3">
+        <p class="text-2xl font-bold text-gray-900">Edit User</p>
+        <!-- <button class="close-modal focus:outline-none text-gray-400 hover:text-gray-500 transition-colors" onclick="Modal.close('editUserModal')">
+          <i class="fas fa-times text-xl"></i>
+        </button> -->
+      </div>
+      
+      <!-- Gray Line Divider -->
+      <div class="w-full h-px bg-gray-200 mb-4"></div>
+      
+      <!-- User Info Section - Will be populated dynamically -->
+      <div id="edit_user_info"></div>
+      
+      <form id="editUserForm" class="mt-4" method="post" action="{{ url_for('update_user') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="edit_email" name="edit_email" value="">
+        
+        <div class="space-y-4">
+          <!-- Full Name Field -->
+          <div>
+            <label for="edit_full_name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <input type="text" id="edit_full_name" name="full_name" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                   required placeholder="Enter full name">
+          </div>
+          
+          <!-- Email Field (readonly for editing) -->
+          <div>
+            <label for="edit_email_display" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" id="edit_email_display" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-100 cursor-not-allowed" readonly>
+            <div class="text-xs text-gray-500 mt-1">Email cannot be changed</div>
+          </div>
+          
+          <!-- Role Field -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-3">Role</label>
+            <div class="space-y-3">
+              
+              <!-- Admin Role -->
+              <label class="flex items-start space-x-3 cursor-pointer p-4 border rounded-lg transition hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                <input type="radio" id="edit_role_admin" name="role" value="admin" 
+                  class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" required>
+                <div>
+                  <span class="font-medium text-gray-900">Admin</span>
+                  <p class="text-sm text-gray-500 mt-1">Full system access – can manage users, cameras, and system settings.</p>
+                </div>
+              </label>
+
+              <!-- User Role -->
+              <label class="flex items-start space-x-3 cursor-pointer p-4 border rounded-lg transition hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                <input type="radio" id="edit_role_user" name="role" value="user" 
+                  class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                <div>
+                  <span class="font-medium text-gray-900">User</span>
+                  <p class="text-sm text-gray-500 mt-1">View-only access – can monitor camera feeds in real-time.</p>
+                </div>
+              </label>
+
+            </div>
+          </div>
+
+        </div>
+        
+        <!-- Footer with Gray Line Divider -->
+        <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+          <button type="button" class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" onclick="Modal.close('editUserModal')">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 border border-transparent rounded-xl text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" id="editSubmitButton" disabled>
+            Update User
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

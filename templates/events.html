@@ -1,0 +1,393 @@
+{% extends "includes/base.html" %}
+
+{% block title %}Detection Events - Pool Watch{% endblock %}
+
+{% set active_page = 'events' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto h-full flex flex-col">
+  <!-- Combined Container with Single Background -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden flex-1 flex flex-col">
+    <!-- Page Header -->
+    <div class="border-b border-gray-200 p-4 md:p-6 flex-shrink-0">
+      <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-3 md:gap-4">
+        <!-- Left: Title and Description -->
+        <div class="flex-1 min-w-0">
+          <h1 class="text-xl md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">Detection Events</h1>
+          <p class="text-sm md:text-base text-gray-600 mb-2">Automatic snapshot capture when alarm is triggered</p>
+        
+          <!-- Delete All Button - Hidden for users -->
+        {% if session.get('role') != 'user' %}
+        <button onclick="openDeleteAllModal()" 
+                id="deleteAllBtn"
+                class="inline-flex items-center justify-center px-3 md:px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors self-start lg:self-auto whitespace-nowrap">
+          <i class="fas fa-trash mr-2"></i>Delete All Events
+        </button>
+        {% endif %}
+        </div>
+        
+        <!-- Right: Control Buttons -->
+        <div class="flex flex-col items-start gap-2 md:gap-3 lg:flex-shrink-0">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3">
+            <label for="cameraFilter" class="text-xs font-semibold text-gray-500 uppercase tracking-wide sm:text-sm">Camera</label>
+            <select id="cameraFilter" class="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm hover:border-gray-400 transition-colors">
+              <option value="all">All Cameras</option>
+              {% for camera in cameras %}
+              <option value="{{ camera.id }}">{{ camera.name }}</option>
+              {% endfor %}
+            </select>
+            
+            <label for="dateFilter" class="text-xs font-semibold text-gray-500 uppercase tracking-wide sm:text-sm">Date</label>
+            <div class="flex items-center gap-2 flex-1">
+              <input type="date" id="dateFilter" class="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm hover:border-gray-400 transition-colors" />
+              <button type="button" id="resetDateFilter" class="px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition whitespace-nowrap">Clear</button>
+            </div>
+          </div>
+          
+          
+        </div>
+      </div>
+    </div>
+
+    <!-- Events List Container -->
+    <div class="flex-1 overflow-auto p-4 md:p-6">
+      <div class="space-y-3 md:space-y-4" id="eventsList">
+        {% if events|length == 0 %}
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-8 md:py-12 h-full flex items-center justify-center">
+          <div class="max-w-sm mx-auto">
+            <div class="inline-flex items-center justify-center w-16 md:w-20 h-16 md:h-20 rounded-full bg-gradient-to-r from-blue-100 to-sky-100 mb-3 md:mb-4">
+              <i class="fas fa-camera text-blue-600 text-2xl md:text-4xl"></i>
+            </div>
+            <h3 class="text-lg md:text-xl font-semibold text-gray-900 mb-1 md:mb-2">No Events Yet</h3>
+            <p class="text-xs md:text-sm text-gray-600">Snapshots will be automatically captured when drowning alarm is triggered.</p>
+          </div>
+        </div>
+        {% else %}
+          {% for event in events %}
+          <div class="bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 event-card" 
+               data-camera-id="{{ event.camera_id }}" 
+               data-timestamp="{{ event.timestamp.timestamp() if event.timestamp else '' }}"
+               data-event-id="{{ event.id }}"
+               data-snapshot-url="{{ event.snapshot_url if event.snapshot_url else '/static/img/no-signal.png' }}"
+               data-camera-name="{{ event.camera_name if event.camera_name else 'Unknown Camera' }}"
+               data-location="{{ event.location if event.location else 'Pool Area' }}"
+               data-full-time="{{ event.timestamp.strftime('%b %d, %Y at %I:%M:%S %p PHT') if event.timestamp else 'Unknown time' }}"
+               data-confidence="{{ event.confidence if event.confidence else 0 }}"
+               data-drowning-level="{{ event.drowning_count if event.drowning_count else '0' }}">
+            <div class="flex flex-col md:flex-row">
+              <!-- Thumbnail Image -->
+              <div class="w-full md:w-1/3 lg:w-1/4 relative group cursor-pointer" onclick="openImageModalFromCard(this.closest('.event-card'), event)">
+                <div class="aspect-video bg-gray-900 relative overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-t-none">
+                  <img src="{{ event.snapshot_url if event.snapshot_url else '/static/img/no-signal.png' }}" 
+                       alt="Detection Snapshot" 
+                       class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                       onerror="this.src='/static/img/no-signal.png'"
+                       loading="lazy">
+                  
+                  <!-- Overlay on Hover -->
+                  <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-center">
+                      <i class="fas fa-search-plus text-white text-2xl md:text-3xl mb-2"></i>
+                      <p class="text-white text-xs md:text-sm font-medium">Click to view full screen</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Confidence Badge -->
+                  <div class="absolute top-2 md:top-3 left-2 md:left-3 z-10">
+                    {% set conf_normalized = (event.confidence / 255.0) if event.confidence > 1 else event.confidence %}
+                    <span class="px-2 md:px-3 py-1 rounded-full text-xs font-semibold shadow-lg
+                      {% if conf_normalized >= 0.9 %}bg-red-600{% elif conf_normalized >= 0.7 %}bg-orange-600{% else %}bg-yellow-600{% endif %} text-white">
+                      {{ (conf_normalized * 100)|round(1) }}%
+                    </span>
+                  </div>
+                  
+                  <!-- Alert Badge -->
+                  <div class="absolute top-2 md:top-3 right-2 md:right-3 z-10">
+                    <span class="px-2 md:px-3 py-1 rounded-full text-xs font-semibold bg-red-600 text-white shadow-lg">
+                      <i class="fas fa-exclamation-triangle mr-1"></i>ALERT
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Event Details -->
+              <div class="w-full md:w-2/3 lg:w-3/4 p-4 md:p-6 flex flex-col">
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between mb-3 md:mb-4 gap-2 flex-shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-base md:text-lg font-semibold text-gray-900 mb-1 flex items-center">
+                      <i class="fas fa-exclamation-triangle text-red-600 mr-2 text-sm md:text-base"></i>
+                      <span class="truncate">Drowning Detected - Alarm Triggered</span>
+                    </h3>
+                    <div class="flex flex-wrap items-center gap-2 text-xs md:text-sm text-gray-600">
+                      <span class="flex items-center whitespace-nowrap">
+                        <i class="fas fa-camera mr-1"></i>
+                        <span class="truncate max-w-[120px] md:max-w-none">{{ event.camera_name if event.camera_name else 'Unknown Camera' }}</span>
+                      </span>
+                      <span class="hidden sm:inline text-gray-300">•</span>
+                      <span class="flex items-center whitespace-nowrap">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        <span class="truncate max-w-[100px] md:max-w-none">{{ event.location if event.location else 'Pool Area' }}</span>
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- Actions -->
+                  <div class="flex items-center justify-end sm:justify-start space-x-1 md:space-x-2 flex-shrink-0">
+                    <button onclick="downloadSnapshotFromCard(this.closest('.event-card'))" 
+                            class="text-blue-600 hover:text-blue-800 hover:bg-blue-100 p-2 rounded-full transition text-sm md:text-base"
+                            title="Download Snapshot">
+                      <i class="fas fa-download"></i>
+                    </button>
+                    <!-- Delete Button - Hidden for users -->
+                    {% if session.get('role') != 'user' %}
+                    <button onclick="openDeleteEventModal(`{{ event.id }}`, `{{ event.camera_name if event.camera_name else 'Unknown Camera' }}`, `{{ event.timestamp.strftime('%b %d, %Y at %I:%M:%S %p PHT') if event.timestamp else 'Unknown time' }}`)" 
+                            class="delete-event-btn text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition text-sm md:text-base"
+                            title="Delete Event">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                    {% endif %}
+                  </div>
+                </div>
+                
+                <!-- Metadata Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3 flex-shrink-0">
+                  <div class="bg-white rounded-lg p-2 md:p-3 border border-gray-200">
+                    <div class="text-xs text-gray-500 mb-1">Date</div>
+                    <div class="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                      {{ event.timestamp.strftime('%b %d, %Y') if event.timestamp else 'Unknown' }}
+                    </div>
+                  </div>
+                  
+                  <div class="bg-white rounded-lg p-2 md:p-3 border border-gray-200">
+                    <div class="text-xs text-gray-500 mb-1">Time</div>
+                    <div class="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                      {{ event.timestamp.strftime('%I:%M:%S %p PHT') if event.timestamp else 'Unknown' }}
+                    </div>
+                  </div>
+                  
+                  <!-- <div class="bg-white rounded-lg p-2 md:p-3 border border-gray-200">
+                    <div class="text-xs text-gray-500 mb-1">Confidence</div>
+                    <div class="text-sm font-semibold text-gray-900">
+                      {% set conf_normalized = (event.confidence / 255.0) if event.confidence and event.confidence > 1 else (event.confidence if event.confidence else 0) %}
+                      {{ (conf_normalized * 100)|round(1) }}%
+                    </div>
+                  </div> -->
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Full Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-95 hidden z-50" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999;" onclick="closeImageModal(event)">
+  <div class="relative w-full h-full flex items-center justify-center" onclick="event.stopPropagation()">
+    <!-- Close Button -->
+    <button onclick="closeImageModal()" class="absolute top-4 right-4 p-3 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full transition-all z-30 shadow-lg hover:scale-110 cursor-pointer" title="Close (ESC)">
+      <i class="fas fa-times text-gray-800 text-xl"></i>
+    </button>
+    
+    <!-- Image Container - Full Screen -->
+    <div class="relative w-full h-full flex items-center justify-center p-2" style="min-height: 100vh;">
+      <img id="modalImage" src="" alt="Full Size Snapshot" class="w-auto h-auto object-contain rounded-lg shadow-2xl" style="display: block; margin: auto; max-width: 98vw; max-height: 98vh; width: auto; height: auto;">
+    </div>
+    
+    <!-- Image Info Overlay -->
+    <div id="modalInfo" class="absolute bottom-4 left-4 bg-black bg-opacity-80 text-white p-4 rounded-lg max-w-sm backdrop-blur-sm z-20">
+      <!-- Image info will be inserted here -->
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_modals %}
+  {% include "includes/modals/delete_event_modal.html" %}
+  {% include "includes/modals/delete_all_event_modal.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/events.js') }}"></script>
+<script>
+// Store user role for JavaScript access
+const USER_ROLE = '{{ session.get("role", "user") }}';
+
+// Modal state management
+let currentEventIdToDelete = null;
+
+// Single Event Delete Modal Functions
+function openDeleteEventModal(eventId, cameraName, timestamp) {
+    // Check role permission
+    if (USER_ROLE === 'user') {
+        showFlashMessage('You do not have permission to delete events', 'warning');
+        return;
+    }
+    
+    currentEventIdToDelete = eventId;
+    
+    // Update modal content for single event
+    document.getElementById('deleteEventCameraName').textContent = cameraName;
+    document.getElementById('deleteEventTimestamp').textContent = timestamp;
+    
+    // Show modal with animation
+    const modal = document.getElementById('deleteEventModal');
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100', 'pointer-events-auto');
+}
+
+function closeDeleteEventModal() {
+    const modal = document.getElementById('deleteEventModal');
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    currentEventIdToDelete = null;
+}
+
+// Delete All Events Modal Functions
+function openDeleteAllModal() {
+    // Check role permission
+    if (USER_ROLE === 'user') {
+        showFlashMessage('You do not have permission to delete events', 'warning');
+        return;
+    }
+    
+    const eventCount = document.querySelectorAll('.event-card').length;
+    if (eventCount === 0) {
+        showFlashMessage('No events to delete', 'info');
+        return;
+    }
+    
+    // Update modal content for all events
+    document.getElementById('deleteAllEventCount').textContent = eventCount;
+    
+    // Show modal with animation
+    const modal = document.getElementById('deleteAllModal');
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100', 'pointer-events-auto');
+}
+
+function closeDeleteAllModal() {
+    const modal = document.getElementById('deleteAllModal');
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+}
+
+// Event listeners for modals
+document.addEventListener('DOMContentLoaded', function() {
+    // Single event delete modal
+    const deleteEventModal = document.getElementById('deleteEventModal');
+    const confirmDeleteEventBtn = document.getElementById('confirmDeleteEvent');
+    const deleteEventOverlay = deleteEventModal?.querySelector('.modal-overlay');
+
+    if (confirmDeleteEventBtn) {
+        confirmDeleteEventBtn.addEventListener('click', function() {
+            if (currentEventIdToDelete) {
+                deleteEvent(currentEventIdToDelete);
+                closeDeleteEventModal();
+            }
+        });
+    }
+
+    if (deleteEventOverlay) {
+        deleteEventOverlay.addEventListener('click', closeDeleteEventModal);
+    }
+
+    // Delete all events modal
+    const deleteAllModal = document.getElementById('deleteAllModal');
+    const confirmDeleteAllBtn = document.getElementById('confirmDeleteAll');
+    const deleteAllOverlay = deleteAllModal?.querySelector('.modal-overlay');
+
+    if (confirmDeleteAllBtn) {
+        confirmDeleteAllBtn.addEventListener('click', function() {
+            clearAllSnapshots();
+            closeDeleteAllModal();
+        });
+    }
+
+    if (deleteAllOverlay) {
+        deleteAllOverlay.addEventListener('click', closeDeleteAllModal);
+    }
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (!deleteEventModal.classList.contains('opacity-0')) {
+                closeDeleteEventModal();
+            }
+            if (!deleteAllModal.classList.contains('opacity-0')) {
+                closeDeleteAllModal();
+            }
+        }
+    });
+});
+</script>
+
+<style>
+/* Modal transition styles */
+.modal {
+    transition: opacity 0.25s ease;
+}
+
+.modal-container {
+    transform: scale(0.9);
+    transition: transform 0.25s ease;
+}
+
+.modal.opacity-100 .modal-container {
+    transform: scale(1);
+}
+
+/* Flash message styles */
+.flash-messages-container {
+    max-width: 320px;
+}
+
+.flash-message {
+    border-radius: 8px;
+    border-width: 1px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Blink animation for alarm */
+@keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.3; }
+}
+
+.blink {
+    animation: blink 1s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    /* Stack buttons vertically on mobile */
+    .flex-col.sm\:flex-row {
+        gap: 0.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    /* Ensure buttons stay on same line on large screens */
+    .lg\:flex-shrink-0 {
+        min-width: fit-content;
+    }
+}
+</style>
+{% endblock %}

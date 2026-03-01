@@ -1,0 +1,132 @@
+.gradient-bg {
+    background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+}
+.hero-gradient {
+    background: linear-gradient(135deg, #0C4A6E 0%, #0EA5E9 50%, #38BDF8 100%);
+}
+.floating-animation {
+    animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+.video-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+}
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+}
+
+/* Mobile Sidebar - LEFT SIDEBAR */
+.mobile-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    left: 0; /* Ensure it starts from left */
+}
+.mobile-sidebar.active {
+    transform: translateX(0);
+}
+.mobile-overlay {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+}
+.mobile-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Scroll to Top Button */
+.scroll-top-btn {
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+.scroll-top-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.scroll-top-btn:hover {
+    transform: translateY(-5px);
+}
+
+/* Scroll Animations */
+.scroll-animate {
+    opacity: 0;
+    transition: all 0.6s ease-out;
+}
+.scroll-animate.animate-in {
+    opacity: 1;
+}
+.fade-up {
+    transform: translateY(30px);
+}
+.fade-up.animate-in {
+    transform: translateY(0);
+}
+.fade-down {
+    transform: translateY(-30px);
+}
+.fade-down.animate-in {
+    transform: translateY(0);
+}
+.fade-left {
+    transform: translateX(30px);
+}
+.fade-left.animate-in {
+    transform: translateX(0);
+}
+.fade-right {
+    transform: translateX(-30px);
+}
+.fade-right.animate-in {
+    transform: translateX(0);
+}
+.zoom-in {
+    transform: scale(0.9);
+}
+.zoom-in.animate-in {
+    transform: scale(1);
+}
+
+/* Staggered animations */
+.stagger-1 { transition-delay: 0.1s; }
+.stagger-2 { transition-delay: 0.2s; }
+.stagger-3 { transition-delay: 0.3s; }
+.stagger-4 { transition-delay: 0.4s; }
+
+/* Emergency section specific styles */
+.emergency-card {
+    position: relative;
+    overflow: hidden;
+}
+.emergency-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+}
+.emergency-pulse {
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+.emergency-hotline {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-left: 4px solid #dc2626;
+}

@@ -1,0 +1,176 @@
+<!-- Add User Modal  -->
+<div id="addUserModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 transition-opacity duration-300">
+  
+  <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50 " style="pointer-events: none;"></div>
+  
+  <!-- Modal container -->
+  <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 overflow-hidden" style="height: 620px;">
+    
+    <!-- Header -->
+    <div class="sticky top-0 bg-white border-b border-gray-200 z-10">
+      <div class="flex justify-between items-center py-4 px-6">
+        <p class="text-2xl font-bold text-gray-900">Add New User</p>
+        <!-- <button class="close-modal focus:outline-none text-gray-400 hover:text-gray-500 transition-colors" onclick="Modal.close('addUserModal')">
+          <i class="fas fa-times text-xl"></i>
+        </button> -->
+      </div>
+    </div>
+    
+    <!-- Content Area -->
+    <div class="h-full overflow-y-auto">
+      <div class="p-6">
+        <form id="addUserForm" method="post" action="{{ url_for('save_user') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          
+          <div class="space-y-4">
+            <!-- Full Name Field -->
+            <div>
+              <label for="add_full_name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input type="text" id="add_full_name" name="full_name" 
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                value="{{ request.form.full_name if request.form }}" 
+                required placeholder="Juan Dela Cruz">
+              <div id="add_full_name_error" class="text-red-500 text-sm mt-1 hidden">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                <span>Please enter a valid name (minimum 2 characters)</span>
+              </div>
+            </div>
+            
+            <!-- Email Field -->
+            <div>
+              <label for="add_email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" id="add_email" name="email" 
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                value="{{ request.form.email if request.form }}" 
+                required placeholder="juandelacruz@gmail.com">
+              <div id="add_email_error" class="text-red-500 text-sm mt-1 hidden">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                <span>Please enter a valid email address</span>
+              </div>
+              <div id="add_email_duplicate" class="text-red-500 text-sm mt-1 hidden">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                <span>This email is already registered</span>
+              </div>
+            </div>
+            
+            <!-- Password Field -->
+            <div>
+              <label for="add_password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <div class="relative">
+                <input type="password" id="add_password" name="password" 
+                  class="w-full border border-gray-300 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  required>
+                <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none password-toggle">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              
+              <div class="mt-2" style="display: none;">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-xs text-gray-500">Password strength</span>
+                  <span id="password_strength_text" class="text-xs font-medium text-gray-600">-</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-1.5">
+                  <div id="password_strength_bar" class="h-1.5 rounded-full transition-all duration-300 bg-gray-400" style="width: 0%"></div>
+                </div>
+              </div>
+              
+              <div id="add_password_error" class="text-red-500 text-sm mt-1 hidden">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                <span>Password must be at least 8 characters</span>
+              </div>
+            </div>
+
+            <div>
+              <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+              <div class="relative">
+                <input type="password" id="confirm_password" name="confirm_password" 
+                  class="w-full border border-gray-300 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  required>
+                <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none password-toggle">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <div id="confirm_password_error" class="text-red-500 text-sm mt-1 hidden">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                <span>Passwords do not match</span>
+              </div>
+            </div>
+            
+            <!-- Role Field -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">Role</label>
+              <div class="space-y-3">
+                
+                <!-- Admin Role -->
+                <label class="flex items-start space-x-3 cursor-pointer p-4 border border-gray-300 rounded-lg transition hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                  <input type="radio" id="role_admin" name="role" value="admin" 
+                    class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    required>
+                  <div class="flex-1">
+                    <span class="font-medium text-gray-900">Admin</span>
+                    <p class="text-sm text-gray-500 mt-1">Full system access – can manage users, cameras, and system settings.</p>
+                  </div>
+                </label>
+
+                <!-- User Role -->
+                <label class="flex items-start space-x-3 cursor-pointer p-4 border border-gray-300 rounded-lg transition hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                  <input type="radio" id="role_user" name="role" value="user" 
+                    class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                  <div class="flex-1">
+                    <span class="font-medium text-gray-900">User</span>
+                    <p class="text-sm text-gray-500 mt-1">View-only access – can monitor camera feeds in real-time.</p>
+                  </div>
+                </label>
+
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="sticky bottom-0 bg-white border-t border-gray-200 z-10">
+      <div class="flex justify-end space-x-3 p-6">
+        <button type="button" class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" onclick="Modal.close('addUserModal')">
+          Cancel
+        </button>
+        <button type="submit" form="addUserForm" class="px-4 py-2 bg-blue-600 border border-transparent rounded-xl text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" id="submitButton" disabled>
+          Save User
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+
+.modal-container > div:not(.sticky)::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-container > div:not(.sticky)::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 3px;
+}
+
+.modal-container > div:not(.sticky)::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.modal-container > div:not(.sticky)::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+.modal-container {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.sticky {
+  backdrop-filter: blur(8px);
+}
+</style>

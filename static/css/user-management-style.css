@@ -1,0 +1,25 @@
+/* Password toggle button styling */
+.password-toggle {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+  color: #4b5563;
+}
+
+/* Modal animations */
+.modal {
+  transition: opacity 0.3s ease;
+}
+
+/* Floating button positioning */
+@media (max-width: 768px) {
+  #addUserBtn {
+    bottom: 5rem;
+    right: 1.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+

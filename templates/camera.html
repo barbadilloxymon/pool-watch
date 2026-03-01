@@ -1,0 +1,208 @@
+{% extends "includes/base.html" %}
+
+{% block title %}Camera Management - Pool Watch{% endblock %}
+
+{% set active_page = 'camera_management' %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-sm h-full flex flex-col">
+  <!-- Fixed Header Section -->
+  <div class="flex-shrink-0 p-4 md:p-6 border-b border-gray-100">
+    <!-- Title and Description -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-800">Camera Management</h2>
+        <p class="text-gray-600 mt-1">Monitor and manage your pool surveillance cameras</p>
+      </div>
+      
+      <!-- Search Bar -->
+      <div class="relative w-full md:w-64">
+        <input type="text" id="searchInput" placeholder="Search Camera..." 
+               class="w-full pl-10 pr-4 py-2 rounded-3xl border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <i class="fas fa-search text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Cameras Label -->
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-gray-900">All Cameras</h3>
+    </div>
+  </div>
+
+  <!-- Scrollable Content Area -->
+  <div class="flex-1 overflow-y-auto custom-scrollbar">
+    <div class="p-4 md:p-6">
+      <div id="camerasContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% if cameras|length > 0 %}
+          {% for camera in cameras %}
+            <div class="camera-card bg-white border border-blue-100 rounded-xl overflow-hidden shadow hover:shadow-lg transition duration-200" data-camera-id="{{ camera.id }}">
+              
+              <!-- Camera Feed -->
+              <div class="camera-feed-container relative bg-blue-900 h-52">
+                
+                <!-- Status Badge -->
+                <div class="camera-status absolute top-3 left-3 flex items-center bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full z-10">
+                  <span class="w-2 h-2 rounded-full mr-2 {{ 'bg-green-400' if camera.connection_status == 'connected' else ('bg-yellow-400' if camera.connection_status == 'connecting' else ('bg-gray-500' if camera.connection_status == 'offline' else 'bg-red-500')) }}"></span>
+                  <span class="text-white text-xs font-medium">
+                    {% if camera.connection_status == 'connected' %}
+                      Connected
+                    {% elif camera.connection_status == 'connecting' %}
+                      Connecting...
+                    {% elif camera.connection_status == 'offline' %}
+                      Offline
+                    {% else %}
+                      Disconnected
+                    {% endif %}
+                  </span>
+                </div>
+                
+                <!-- Live Feed -->
+                <img src="{{ url_for('video_feed', camera_id=camera.id) }}" 
+                    class="h-full w-full object-cover"
+                    alt="{{ camera.name }}"
+                    onerror="this.src='/static/img/no-signal.png'">
+              </div>
+              
+              <!-- Card Details -->
+              <div class="p-4">
+                <h3 class="font-semibold text-lg text-gray-800 flex items-center gap-2 mb-1">
+                  {{ camera.name.replace('_', ' ').title() }}
+                </h3>
+                <p class="text-blue-600 text-sm mb-3 flex items-center gap-2">
+                  <i class="fas fa-map-marker-alt text-blue-400"></i> 
+                  {{ camera.location.replace('_', ' ').title() if camera.location else 'Unknown Location' }}
+                </p>
+                
+                <div class="flex justify-between items-center">
+                  <!-- RTSP Info -->
+                  <span class="text-xs text-gray-500 truncate max-w-[150px]" title="{{ camera.rtsp_url }}">
+                    <i class="fas fa-link mr-1"></i>{{ camera.rtsp_url|truncate(20, True) }}
+                  </span>
+                  
+                  <!-- Action Buttons -->
+                  <div class="flex space-x-2">
+                    <button class="text-blue-600 hover:text-blue-800 hover:bg-blue-100 p-2 rounded-full transition"
+                      onclick="editCamera('{{ camera.id }}', '{{ camera.name }}', '{{ camera.rtsp_url }}', '{{ camera.location }}'); return false;"
+                      title="Edit">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition"
+                      onclick="deleteCamera('{{ camera.id }}'); return false;"
+                      title="Delete">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <!-- Empty State -->
+          <div class="col-span-full flex flex-col items-center justify-center py-16 text-center bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div class="text-6xl text-blue-300 mb-4">
+              <i class="fas fa-video-slash"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">No Cameras Configured</h3>
+            <p class="text-gray-600 mb-8 leading-relaxed">Start by adding your first RTSP camera to monitor your pool in real-time.</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- No Search Results -->
+      <div id="noResults" class="hidden flex flex-col items-center justify-center py-12 text-center">
+        <div class="text-6xl text-blue-200 mb-4">
+          <i class="fas fa-search"></i>
+        </div>
+        <h3 class="text-xl font-medium text-blue-700 mb-2">No Matching Cameras</h3>
+        <p class="text-blue-600">Try adjusting your search terms.</p>
+      </div>
+    </div>
+  </div>
+
+ <!-- Floating Add Camera Button -->
+ <button id="addCameraBtn" 
+               onclick="openAddCameraModal()"
+               class="fixed bottom-14 right-14 w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 z-40">
+         <i class="fas fa-plus text-2xl sm:text-3xl"></i>
+ </button>
+ 
+</div>
+
+<style>
+/* Ensure the floating button stays visible and doesn't interfere with scrolling */
+#addCameraBtn {
+  position: fixed;
+  pointer-events: auto;
+}
+
+/* Add padding to prevent content from being hidden behind the floating button */
+.custom-scrollbar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Smooth shadow animation for floating button */
+#addCameraBtn:hover {
+  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.3), 0 10px 10px -5px rgba(59, 130, 246, 0.2);
+}
+
+#addCameraBtn:active {
+  transform: scale(0.95);
+}
+
+/* Ensure button visibility on all screen sizes */
+@media (max-width: 640px) {
+  #addCameraBtn {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+</style>
+{% endblock %}
+
+{% block extra_modals %}
+  {% include 'includes/modals/add_camera.html' %}
+  {% include 'includes/modals/delete_camera.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/camera-management.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('searchInput');
+  const cameraCards = document.querySelectorAll('.camera-card');
+  const noResults = document.getElementById('noResults');
+  
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      let visibleCount = 0;
+      
+      cameraCards.forEach(card => {
+        const name = card.querySelector('h3')?.textContent.toLowerCase() || '';
+        const location = card.querySelector('p.text-blue-600')?.textContent.toLowerCase() || '';
+        const rtspUrl = card.querySelector('.text-xs.text-gray-500')?.getAttribute('title')?.toLowerCase() || '';
+        
+        if (name.includes(searchTerm) || location.includes(searchTerm) || rtspUrl.includes(searchTerm)) {
+          card.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+      
+      if (noResults) {
+        if (visibleCount === 0 && searchTerm.length > 0) {
+          noResults.classList.remove('hidden');
+        } else {
+          noResults.classList.add('hidden');
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

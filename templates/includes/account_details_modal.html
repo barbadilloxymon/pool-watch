@@ -1,0 +1,151 @@
+<!-- Account Details Modal (My Account) -->
+<div id="accountDetailsModal" class="modal">
+  <div class="modal-content">
+    <!-- Fixed Header -->
+    <div class="sticky top-0 bg-white border-b border-gray-200 z-10">
+      <div class="flex justify-between items-center py-4 px-6">
+        <p class="text-2xl font-bold text-gray-900">My Account</p>
+        <button class="close-modal focus:outline-none text-gray-400 hover:text-gray-500 transition-colors" onclick="closeAccountDetailsModal()">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Content Area -->
+    <div class="h-full overflow-y-auto">
+      <div class="p-6">
+        <!-- Account Information Section -->
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+          <h4 class="text-lg font-semibold text-gray-900 mb-4">Account Information</h4>
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Email:</span>
+              <span class="font-medium" id="accountInfoEmail">{{ session.email or 'Not set' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Role:</span>
+              <span class="font-medium" id="accountInfoRole">{{ session.role|title or 'User' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Account ID:</span>
+              <span class="font-medium text-sm">{{ session.account_id or 'Not set' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Name Section -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <h4 class="text-lg font-semibold text-gray-900 mb-2">Update Name</h4>
+          <p class="text-sm text-gray-600 mb-4">You can change your display name whenever you want.</p>
+          
+          <input 
+            type="text" 
+            id="editNameInput" 
+            value="{{ session.full_name or '' }}"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors mb-2"
+            placeholder="Enter your name"
+            oninput="checkNameChanges()"
+          >
+          <div id="nameError" class="text-red-500 text-sm mt-1 hidden">
+            <i class="fas fa-exclamation-circle mr-1"></i>
+            <span>Please enter a valid name</span>
+          </div>
+
+          <!-- Save Changes Footer -->
+          <div id="saveChangesBar" class="hidden bg-orange-50 border border-orange-200 rounded-lg p-4 mt-4 flex items-center justify-between">
+            <span class="text-sm font-medium text-orange-800">
+              <i class="fas fa-exclamation-circle mr-2"></i>Be careful - unsaved changes!
+            </span>
+            <div class="flex gap-2">
+              <button 
+                onclick="cancelNameChanges()" 
+                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                onclick="updateName()" 
+                id="saveNameBtn"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reset Password Section -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+          <div class="flex items-start mb-3">
+            <i class="fas fa-key text-blue-600 text-xl mr-3 mt-1"></i>
+            <div class="flex-1">
+              <h4 class="text-lg font-semibold text-blue-900 mb-2">Reset Password</h4>
+              <p class="text-sm text-blue-700 mb-4">
+                Changing your password is a secure action. Please ensure your password is strong and secure.
+              </p>
+            </div>
+          </div>
+          <button 
+            onclick="openChangePasswordModal()" 
+            class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center"
+          >
+            <i class="fas fa-lock mr-2"></i>
+            Change Password
+          </button>
+        </div>
+
+        <!-- Account Removal Section -->
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div class="flex items-start mb-3">
+            <i class="fas fa-exclamation-triangle text-red-600 text-xl mr-3 mt-1"></i>
+            <div>
+              <h4 class="text-lg font-semibold text-red-900 mb-2">Account Removal</h4>
+              <p class="text-sm text-red-700 mb-4">
+                Deleting your account is an irreversible action and all your data will be permanently lost.
+              </p>
+            </div>
+          </div>
+          <button 
+            onclick="openDeleteAccountModal()" 
+            class="w-full bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center justify-center"
+          >
+            <i class="fas fa-trash-alt mr-2"></i>
+            Delete Account
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Custom scrollbar for modal content */
+.modal-content > div:not(.sticky)::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content > div:not(.sticky)::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 3px;
+}
+
+.modal-content > div:not(.sticky)::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.modal-content > div:not(.sticky)::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Ensure proper spacing */
+.modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fixed header styling */
+.sticky {
+  backdrop-filter: blur(8px);
+}
+</style>
